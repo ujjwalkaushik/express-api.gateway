@@ -13,6 +13,7 @@ serviceEndpoints:
 policies:
   - cors
   - proxy
+  - logs
 
 pipelines:
   default:
@@ -30,7 +31,14 @@ pipelines:
               headers:               # Allowed headers
                 - Authorization
                 - Content-Type
-              credentials: true      # Allow cookies and credentials
+              credentials: true   
+      - logs:
+          - action:
+            level: info
+            logger:
+            type: console
+            format: '{{timestamp}} [{{level}}] {{message}}'
+            timestamp: true # Allow cookies and credentials
       - proxy:
           - action:
               serviceEndpoint: express-service # Forwards requests to the backend
