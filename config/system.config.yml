@@ -5,8 +5,8 @@ db:
     namespace: EG
 
 # plugins:
-  # express-gateway-plugin-example:
-  #   param1: 'param from system.config' 
+#   custom-plugin:
+#     - package: '../plugins/custom-plugin/manifest.js'
 
 crypto:
   cipherKey: sensitiveKey

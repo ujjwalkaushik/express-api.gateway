@@ -4,22 +4,32 @@ http:
 apiEndpoints:
   my-api:
     host: localhost
-    paths: /api/*
+    paths: /*
 
 serviceEndpoints:
   express-service:
-    url: http://localhost:3000 
+    url: http://localhost:5001 
 
 policies:
   - cors
   - proxy
-  - logs
+  - log
+  # - custom-plugin
 
 pipelines:
   default:
     apiEndpoints:
       - my-api
     policies:
+      # - custom-plugin:
+      - log:
+          - action:
+              level: info
+              message: ${req.method} ${req.originalUrl} # parameter for log action
+              logger:
+                type: console
+                format: '{{timestamp}} [{{level}}] {{message}}'
+                timestamp: true
       - cors:
           - action:
               origin: "*"            # Allow all origins
@@ -32,13 +42,7 @@ pipelines:
                 - Authorization
                 - Content-Type
               credentials: true   
-      - logs:
-          - action:
-            level: info
-            logger:
-            type: console
-            format: '{{timestamp}} [{{level}}] {{message}}'
-            timestamp: true # Allow cookies and credentials
       - proxy:
           - action:
               serviceEndpoint: express-service # Forwards requests to the backend
+      
