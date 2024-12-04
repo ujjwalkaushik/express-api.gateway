@@ -14,6 +14,7 @@ policies:
   - cors
   - proxy
   - log
+  - rate-limit
   # - custom-plugin
 
 pipelines:
@@ -22,10 +23,17 @@ pipelines:
       - my-api
     policies:
       # - custom-plugin:
+      - rate-limit:
+          - action:
+              rateLimitBy: ip                   
+              max: 10                           # Maximum 10 requests
+              windowMs: 60000                   # Time window of 60 seconds (1 minute)
+              delayMs: 0                        
+              message: 'Too many requests, please try again later.' 
       - log:
           - action:
               level: info
-              message: ${req.method} ${req.originalUrl} # parameter for log action
+              message: ${req.method} ${req.originalUrl} 
               logger:
                 type: console
                 format: '{{timestamp}} [{{level}}] {{message}}'
