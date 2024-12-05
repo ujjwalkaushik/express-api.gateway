@@ -15,14 +15,16 @@ policies:
   - proxy
   - log
   - rate-limit
-  # - custom-plugin
+  - custom-log
 
 pipelines:
   default:
     apiEndpoints:
       - my-api
     policies:
-      # - custom-plugin:
+      - custom-log:
+          - action:
+              message: "This is a custom log message!"
       - rate-limit:
           - action:
               rateLimitBy: ip                   

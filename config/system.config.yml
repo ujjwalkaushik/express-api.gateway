@@ -4,9 +4,9 @@ db:
     emulate: true
     namespace: EG
 
-# plugins:
-#   custom-plugin:
-#     - package: '../plugins/custom-plugin/manifest.js'
+plugins:
+  custom-policy:
+    package: './plugins/custom-policy/manifest.js'
 
 crypto:
   cipherKey: sensitiveKey
