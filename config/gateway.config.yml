@@ -16,12 +16,17 @@ policies:
   - log
   - rate-limit
   - custom-log
+  - rewrite
 
 pipelines:
   default:
     apiEndpoints:
       - my-api
     policies:
+      - rewrite:   
+        - action:   
+            search: /api/   
+            replace: /api/v2/ 
       - custom-log:
           - action:
               message: "This is a custom log message!"
