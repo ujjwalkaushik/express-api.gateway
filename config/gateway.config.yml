@@ -17,6 +17,8 @@ policies:
   - rate-limit
   - custom-log
   - rewrite
+  - headers
+  - response-transformer
 
 pipelines:
   default:
@@ -30,6 +32,12 @@ pipelines:
       - custom-log:
           - action:
               message: "This is a custom log message!"
+      - headers:
+          - action:
+              forwardHeaders: {}
+              requestHeaders:
+                add:
+                  x-start-time: "{{Date.now()}}"
       - rate-limit:
           - action:
               rateLimitBy: ip                   
@@ -60,4 +68,19 @@ pipelines:
       - proxy:
           - action:
               serviceEndpoint: express-service # Forwards requests to the backend
-      
+      - headers:
+          - action:
+              forwardHeaders: {}
+              responseHeaders:
+                add:
+                  x-response-time: >
+                    {{Date.now() - Number(request.headers['x-start-time'])}}ms
+      # Include the x-response-time in the response body
+      - response-transformer:
+          - action:
+              body:
+                add:
+                  responseTime: "{{response.headers['x-response-time']}}"
+logs:
+  console:
+    level: debug
