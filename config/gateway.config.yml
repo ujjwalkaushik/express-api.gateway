@@ -8,79 +8,80 @@ apiEndpoints:
 
 serviceEndpoints:
   express-service:
-    url: http://localhost:5001 
+    url: http://localhost:5001
 
 policies:
   - cors
-  - proxy
   - log
   - rate-limit
+  - custom-response
   - custom-log
   - rewrite
-  - headers
+  - request-transformer
   - response-transformer
+  - proxy
 
 pipelines:
   default:
     apiEndpoints:
       - my-api
     policies:
-      - rewrite:   
-        - action:   
-            search: /api/   
-            replace: /api/v2/ 
-      - custom-log:
-          - action:
-              message: "This is a custom log message!"
-      - headers:
-          - action:
-              forwardHeaders: {}
-              requestHeaders:
-                add:
-                  x-start-time: "{{Date.now()}}"
-      - rate-limit:
-          - action:
-              rateLimitBy: ip                   
-              max: 10                           # Maximum 10 requests
-              windowMs: 60000                   # Time window of 60 seconds (1 minute)
-              delayMs: 0                        
-              message: 'Too many requests, please try again later.' 
-      - log:
-          - action:
-              level: info
-              message: ${req.method} ${req.originalUrl} 
-              logger:
-                type: console
-                format: '{{timestamp}} [{{level}}] {{message}}'
-                timestamp: true
       - cors:
           - action:
-              origin: "*"            # Allow all origins
-              methods:               # Allowed HTTP methods
+              origin: "*" # Allow all origins
+              methods: # Allowed HTTP methods
                 - GET
                 - POST
                 - PUT
                 - DELETE
-              headers:               # Allowed headers
+              headers: # Allowed headers
                 - Authorization
                 - Content-Type
-              credentials: true   
-      - proxy:
+              exposeHeaders:
+                - x-start-time
+                - x-response-time # Add the headers you want visible in the browser
+              credentials: true
+      - request-transformer:
           - action:
-              serviceEndpoint: express-service # Forwards requests to the backend
-      - headers:
-          - action:
-              forwardHeaders: {}
-              responseHeaders:
+              headers:
                 add:
-                  x-response-time: >
-                    {{Date.now() - Number(request.headers['x-start-time'])}}ms
+                  x-start-time: "{{Date.now()}}"
+      - rewrite:
+          - action:
+              search: /api/
+              replace: /api/v2/
+      - custom-log:
+          - action:
+              message: "This is a custom log message!"
+      - rate-limit:
+          - action:
+              rateLimitBy: ip
+              max: 50 # Maximum 10 requests
+              windowMs: 60000 # Time window of 60 seconds (1 minute)
+              delayMs: 0
+              message: "Too many requests, please try again later."
+      - log:
+          - action:
+              level: info
+              message: ${req.method} ${req.originalUrl}
+              logger:
+                type: console
+                format: "{{timestamp}} [{{level}}] {{message}}"
+                timestamp: true
       # Include the x-response-time in the response body
       - response-transformer:
           - action:
               body:
                 add:
-                  responseTime: "{{response.headers['x-response-time']}}"
+                  status: 200
+                  responseTime: "{{(Date.now() - Number(req.headers['x-start-time'])) + 'ms'}}"
+                remove: []
+              headers:
+                add:
+                  x-response-time: "{{(Date.now() - Number(req.headers['x-start-time'])) + 'ms'}}"
+      - proxy:
+          - action:
+              serviceEndpoint: express-service # Forwards requests to the backend
 logs:
   console:
     level: debug
